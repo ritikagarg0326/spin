@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Spin & Win</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <div class="spin-bg">
+        <div class="spin-layout">
+
+            <!-- WHEEL -->
+            <div class="wheel-box">
+                <!-- POINTER -->
+                <div class="pointer"></div>
+
+                <!-- ROTATOR -->
+                <div id="wheel-rotator">
+                    <canvas id="wheel" width="360" height="360"></canvas>
+                </div>
+            </div>
+
+            <!-- FORM -->
+            <div class="form-box">
+                <h2>Try Your Luck</h2>
+
+                <input id="name" type="text" placeholder="Your Name">
+                <input id="phone" type="tel" placeholder="Phone Number">
+                <input id="email" type="email" placeholder="Email (optional)">
+
+                <button id="spinBtn" disabled>SPIN NOW !!</button>
+
+                <p id="spinInfo"></p>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- POPUP -->
+    <div id="overlay" class="overlay hidden">
+        <div class="popup">
+            <h1>🎉 Congratulations!</h1>
+            <p id="popup-offer"></p>
+            <button id="closePopup">Awesome 😍</button>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+
+</html>

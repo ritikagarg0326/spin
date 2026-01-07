@@ -1,0 +1,137 @@
+/* ===== PAGE ===== */
+.spin-bg {
+    padding: 80px 20px;
+    background-image: url("https://images.unsplash.com/photo-1543353071-087092ec393a");
+    background-size: cover;
+    background-position: center;
+}
+
+.spin-layout {
+    display: flex;
+    gap: 60px;
+    justify-content: center;
+    align-items: center;
+    max-width: 1100px;
+    margin: auto;
+    flex-wrap: wrap;
+}
+
+/* ===== WHEEL ===== */
+.wheel-box {
+    position: relative;
+    width: 360px;
+    height: 360px;
+}
+
+#wheel-rotator {
+    width: 360px;
+    height: 360px;
+    transition: transform 5s cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+#wheel {
+    background: #fff;
+    border-radius: 50%;
+    border: 8px solid #000;
+}
+
+/* ===== PERFECT POINTER (CENTER OF RADIUS) ===== */
+.pointer {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) translateY(-180px);
+    width: 0;
+    height: 0;
+    border-left: 16px solid transparent;
+    border-right: 16px solid transparent;
+    border-bottom: 32px solid #000;
+    z-index: 20;
+}
+
+/* ===== FORM ===== */
+.form-box {
+    background: rgba(255, 255, 255, 0.95);
+    padding: 30px;
+    width: 320px;
+    border-radius: 10px;
+}
+
+.form-box input,
+.form-box button {
+    width: 100%;
+    padding: 12px;
+    margin: 10px 0;
+}
+
+.form-box button {
+    background: #ffc107;
+    border: none;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.form-box button:disabled {
+    background: #ccc;
+}
+
+#spinInfo {
+    font-size: 14px;
+}
+
+/* ===== POPUP ===== */
+.overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.65);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 100;
+}
+
+.overlay.hidden {
+    display: none;
+}
+
+.popup {
+    background: linear-gradient(135deg, #fff, #fef3c7);
+    padding: 40px;
+    width: 320px;
+    text-align: center;
+    border-radius: 18px;
+    box-shadow: 0 25px 60px rgba(0, 0, 0, 0.4);
+    animation: popIn 0.6s ease;
+}
+
+.popup h1 {
+    color: #d97706;
+}
+
+.popup p {
+    font-size: 22px;
+    font-weight: bold;
+    margin: 20px 0;
+}
+
+.popup button {
+    background: #f59e0b;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 25px;
+    font-size: 16px;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+@keyframes popIn {
+    from {
+        transform: scale(0.6);
+        opacity: 0;
+    }
+
+    to {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
