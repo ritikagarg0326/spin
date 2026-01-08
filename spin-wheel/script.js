@@ -11,6 +11,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const nameInput = document.getElementById("name");
     const phoneInput = document.getElementById("phone");
+    const emailInput = document.getElementById("email"); // OPTIONAL
     const spinBtn = document.getElementById("spinBtn");
     const spinInfo = document.getElementById("spinInfo");
 
@@ -29,7 +30,6 @@ document.addEventListener("DOMContentLoaded", () => {
         "50% OFF"
     ];
 
-    // ❌ 50% NOT allowed in first spin
     const firstSpinIndexes = [0, 1, 2, 3, 4];
 
     const colors = [
@@ -48,11 +48,16 @@ document.addEventListener("DOMContentLoaded", () => {
     const sliceAngle = 360 / labels.length;
 
     let rotation = 0;
-    let spinsUsed = 0; // max 2
+    let spinsUsed = 0;
 
-    /* ================= PHONE VALIDATION ================= */
+    /* ================= HELPERS ================= */
     function sanitizePhone(value) {
         return value.replace(/\D/g, "").slice(0, 10);
+    }
+
+    function isValidEmail(email) {
+        if (!email) return true; // ✅ OPTIONAL
+        return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
     }
 
     /* ================= DRAW WHEEL ================= */
@@ -85,11 +90,13 @@ document.addEventListener("DOMContentLoaded", () => {
         spinInfo.innerHTML = `🎯 You have <b>${left}</b> spin${left !== 1 ? "s" : ""}`;
 
         const isPhoneValid = /^\d{10}$/.test(phoneInput.value);
+        const isEmailValid = isValidEmail(emailInput.value);
 
         spinBtn.disabled =
             left <= 0 ||
             !nameInput.value.trim() ||
-            !isPhoneValid;
+            !isPhoneValid ||
+            !isEmailValid;
     }
 
     nameInput.addEventListener("input", updateUI);
@@ -99,20 +106,18 @@ document.addEventListener("DOMContentLoaded", () => {
         updateUI();
     });
 
+    emailInput.addEventListener("input", updateUI);
+
     /* ================= SPIN LOGIC ================= */
     spinBtn.addEventListener("click", () => {
         if (spinsUsed >= 2) return;
 
         let index;
-
-        // 🎯 FIRST SPIN → RANDOM (NO 50%)
         if (spinsUsed === 0) {
-            const randomIdx =
-                Math.floor(Math.random() * firstSpinIndexes.length);
-            index = firstSpinIndexes[randomIdx];
-        }
-        // 🎯 SECOND SPIN → FIXED 50%
-        else {
+            index = firstSpinIndexes[
+                Math.floor(Math.random() * firstSpinIndexes.length)
+            ];
+        } else {
             index = 5;
         }
 
@@ -128,17 +133,14 @@ document.addEventListener("DOMContentLoaded", () => {
         setTimeout(() => {
             const offerText = labels[index];
 
-            /* ❌ TRY NEXT TIME → NO POPUP */
             if (offerText === "Try Next Time") {
                 alert("🍀 Better luck next time!");
                 return;
             }
 
-            /* ✅ GENERATE COUPON */
             const discount = offerText.match(/\d+/)[0];
             const couponCode = `SONOFSWAAD${discount}`;
 
-            /* 🎉 SHOW POPUP */
             popupOffer.innerHTML = `🎉 Congratulations! You won ${offerText}`;
             popupCoupon.innerHTML = `🎟 Coupon Code: <b>${couponCode}</b>`;
             overlay.classList.remove("hidden");
@@ -147,12 +149,11 @@ document.addEventListener("DOMContentLoaded", () => {
             fetch(SHEET_URL, {
                 method: "POST",
                 mode: "no-cors",
-                headers: {
-                    "Content-Type": "application/json"
-                },
+                headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                     name: nameInput.value,
                     phone: phoneInput.value,
+                    email: emailInput.value || "", // ✅ OPTIONAL
                     offer: offerText,
                     coupon: couponCode,
                     spinNumber: spinsUsed,
