@@ -1,5 +1,10 @@
+// ✅ Google Sheets Web App URL
+const SHEET_URL =
+    "https://script.google.com/macros/s/AKfycbxf7CSMU3baSCkIjxBOKJb7vDS77S0rCNnvnQOPRkjukFslGtjYymxDAJq2OttvuQLG/exec";
+
 document.addEventListener("DOMContentLoaded", () => {
 
+    /* ===== ELEMENTS ===== */
     const canvas = document.getElementById("wheel");
     const ctx = canvas.getContext("2d");
     const rotator = document.getElementById("wheel-rotator");
@@ -13,6 +18,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const popupOffer = document.getElementById("popup-offer");
     const closePopup = document.getElementById("closePopup");
 
+    /* ===== WHEEL DATA ===== */
     const labels = [
         "30% OFF",
         "15% OFF",
@@ -38,8 +44,9 @@ document.addEventListener("DOMContentLoaded", () => {
     const sliceAngle = 360 / labels.length;
 
     let rotation = 0;
-    let spinsUsed = 0;
+    let spinsUsed = 0; // max 2 spins
 
+    /* ===== DRAW WHEEL ===== */
     function drawWheel() {
         for (let i = 0; i < labels.length; i++) {
             const start = sliceRad * i;
@@ -63,6 +70,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     drawWheel();
 
+    /* ===== UI STATE ===== */
     function updateUI() {
         const left = 2 - spinsUsed;
         spinInfo.innerHTML = `🎯 You have <b>${left}</b> spin${left !== 1 ? "s" : ""}`;
@@ -75,26 +83,54 @@ document.addEventListener("DOMContentLoaded", () => {
     nameInput.addEventListener("input", updateUI);
     phoneInput.addEventListener("input", updateUI);
 
+    /* ===== SPIN ACTION ===== */
     spinBtn.addEventListener("click", () => {
         if (spinsUsed >= 2) return;
 
-        const index = spinsUsed === 0
-            ? Math.floor(Math.random() * labels.length)
-            : 5;
+        // 1st spin random, 2nd spin fixed to 50% OFF
+        const index =
+            spinsUsed === 0
+                ? Math.floor(Math.random() * labels.length)
+                : 5;
 
-        const rotateDeg = 360 * 6 + (sliceAngle * index) + sliceAngle / 2;
+        const rotateDeg =
+            360 * 6 + sliceAngle * index + sliceAngle / 2;
+
         rotation += rotateDeg;
         rotator.style.transform = `rotate(${rotation}deg)`;
 
         spinsUsed++;
         updateUI();
 
+        // Wait until spin animation ends
         setTimeout(() => {
-            popupOffer.innerHTML = `🎁 You won <span style="color:#f59e0b">${labels[index]}</span>`;
+            const offerText = labels[index];
+
+            /* 🎉 SHOW POPUP */
+            popupOffer.innerHTML =
+                `🎁 You won <span style="color:#f59e0b">${offerText}</span>`;
             overlay.classList.remove("hidden");
+
+            /* 📤 SEND DATA TO GOOGLE SHEET */
+            fetch(SHEET_URL, {
+                method: "POST",
+                mode: "no-cors", // REQUIRED for Apps Script
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    name: nameInput.value,
+                    phone: phoneInput.value,
+                    offer: offerText,
+                    spinNumber: spinsUsed,
+                    userAgent: navigator.userAgent
+                })
+            });
+
         }, 5200);
     });
 
+    /* ===== CLOSE POPUP ===== */
     closePopup.onclick = () => {
         overlay.classList.add("hidden");
     };
