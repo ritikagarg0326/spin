@@ -1,4 +1,4 @@
-// ✅ Google Sheets Web App URL
+// 🔗 Google Sheets Web App URL
 const SHEET_URL =
     "https://script.google.com/macros/s/AKfycbxf7CSMU3baSCkIjxBOKJb7vDS77S0rCNnvnQOPRkjukFslGtjYymxDAJq2OttvuQLG/exec";
 
@@ -29,6 +29,9 @@ document.addEventListener("DOMContentLoaded", () => {
         "50% OFF"
     ];
 
+    // ❌ 50% NOT allowed in first spin
+    const firstSpinIndexes = [0, 1, 2, 3, 4];
+
     const colors = [
         "#000000",
         "#14c6cc",
@@ -45,7 +48,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const sliceAngle = 360 / labels.length;
 
     let rotation = 0;
-    let spinsUsed = 0;
+    let spinsUsed = 0; // max 2
 
     /* ================= PHONE VALIDATION ================= */
     function sanitizePhone(value) {
@@ -96,14 +99,22 @@ document.addEventListener("DOMContentLoaded", () => {
         updateUI();
     });
 
-    /* ================= SPIN ACTION ================= */
+    /* ================= SPIN LOGIC ================= */
     spinBtn.addEventListener("click", () => {
         if (spinsUsed >= 2) return;
 
-        const index =
-            spinsUsed === 0
-                ? Math.floor(Math.random() * labels.length)
-                : 5;
+        let index;
+
+        // 🎯 FIRST SPIN → RANDOM (NO 50%)
+        if (spinsUsed === 0) {
+            const randomIdx =
+                Math.floor(Math.random() * firstSpinIndexes.length);
+            index = firstSpinIndexes[randomIdx];
+        }
+        // 🎯 SECOND SPIN → FIXED 50%
+        else {
+            index = 5;
+        }
 
         const rotateDeg =
             360 * 6 + sliceAngle * index + sliceAngle / 2;
@@ -124,7 +135,7 @@ document.addEventListener("DOMContentLoaded", () => {
             }
 
             /* ✅ GENERATE COUPON */
-            const discount = offerText.match(/\d+/)[0]; // 25, 30, 40, 50
+            const discount = offerText.match(/\d+/)[0];
             const couponCode = `SONOFSWAAD${discount}`;
 
             /* 🎉 SHOW POPUP */
@@ -132,7 +143,7 @@ document.addEventListener("DOMContentLoaded", () => {
             popupCoupon.innerHTML = `🎟 Coupon Code: <b>${couponCode}</b>`;
             overlay.classList.remove("hidden");
 
-            /* 📤 SAVE DATA TO GOOGLE SHEET */
+            /* 📤 SAVE DATA */
             fetch(SHEET_URL, {
                 method: "POST",
                 mode: "no-cors",
