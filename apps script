@@ -1,0 +1,38 @@
+function doGet() {
+  return ContentService
+    .createTextOutput("Spin Wheel API is running")
+    .setMimeType(ContentService.MimeType.TEXT);
+}
+
+function doPost(e) {
+  try {
+    const ss = SpreadsheetApp.openById(
+      "1sUwhNnjVsyYDxPWeBG7wiQnurFQsrTTt6HKfASVfSck"
+    );
+
+    const sheet = ss.getSheetByName("SpinWheelData");
+
+    const data = JSON.parse(e.postData.contents);
+
+    sheet.appendRow([
+      new Date(),          // Timestamp
+      data.name || "",
+      data.phone || "",
+      data.email || "",    // ✅ OPTIONAL EMAIL
+      data.offer || "",
+      data.spinNumber || "",
+      data.userAgent || ""
+    ]);
+
+    return ContentService
+      .createTextOutput(JSON.stringify({ status: "success" }))
+      .setMimeType(ContentService.MimeType.JSON);
+
+  } catch (err) {
+    return ContentService
+      .createTextOutput(
+        JSON.stringify({ status: "error", message: err.toString() })
+      )
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+}
