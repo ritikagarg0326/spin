@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Spin & Win</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+<style>
+/* ===== PAGE ===== */
+.spin-bg {
+    padding: 80px 20px;
+    background-image: url("https://images.unsplash.com/photo-1543353071-087092ec393a");
+    background-size: cover;
+    background-position: center;
+}
+
+.spin-layout {
+    display: flex;
+    gap: 60px;
+    justify-content: center;
+    align-items: center;
+    max-width: 1100px;
+    margin: auto;
+    flex-wrap: wrap;
+}
+
+/* ===== WHEEL ===== */
+.wheel-box {
+    position: relative;
+    width: 360px;
+    height: 360px;
+}
+
+#wheel-rotator {
+    width: 360px;
+    height: 360px;
+    transition: transform 5s cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+#wheel {
+    background: #fff;
+    border-radius: 50%;
+    border: 8px solid #000;
+}
+
+/* ===== POINTER ===== */
+.pointer {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) translateY(-180px);
+    width: 0;
+    height: 0;
+    border-left: 16px solid transparent;
+    border-right: 16px solid transparent;
+    border-bottom: 32px solid #000;
+    z-index: 20;
+}
+
+/* ===== FORM ===== */
+.form-box {
+    background: rgba(255, 255, 255, 0.95);
+    padding: 30px;
+    width: 320px;
+    border-radius: 10px;
+}
+
+.form-box input,
+.form-box button {
+    width: 100%;
+    padding: 12px;
+    margin: 10px 0;
+}
+
+.form-box button {
+    background: #ffc107;
+    border: none;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.form-box button:disabled {
+    background: #ccc;
+}
+
+#spinInfo {
+    font-size: 14px;
+}
+
+/* ===== POPUP ===== */
+.overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.65);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 100;
+}
+
+.overlay.hidden {
+    display: none;
+}
+
+.popup {
+    background: linear-gradient(135deg, #fff, #fef3c7);
+    padding: 40px;
+    width: 320px;
+    text-align: center;
+    border-radius: 18px;
+    box-shadow: 0 25px 60px rgba(0, 0, 0, 0.4);
+    animation: popIn 0.6s ease;
+}
+
+.popup h1 {
+    color: #d97706;
+}
+
+.popup p {
+    font-size: 22px;
+    font-weight: bold;
+    margin: 20px 0;
+}
+
+.popup button {
+    background: #f59e0b;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 25px;
+    font-size: 16px;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+@keyframes popIn {
+    from { transform: scale(0.6); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+}
+</style>
+</head>
+
+<body>
+
+<div class="spin-bg">
+  <div class="spin-layout">
+
+    <div class="wheel-box">
+      <div class="pointer"></div>
+      <div id="wheel-rotator">
+        <canvas id="wheel" width="360" height="360"></canvas>
+      </div>
+    </div>
+
+    <div class="form-box">
+      <h2>🎯 Try Your Luck</h2>
+
+      <input id="name" type="text" placeholder="Enter your name" />
+      <input id="phone" type="tel" placeholder="Enter 10-digit phone number" maxlength="10" />
+      <input id="email" type="email" placeholder="Email (optional)" />
+
+      <button id="spinBtn" disabled>SPIN NOW 🎡</button>
+      <p id="spinInfo"></p>
+    </div>
+
+  </div>
+</div>
+
+<div id="overlay" class="overlay hidden">
+  <div class="popup">
+    <h1>🎉 Congratulations!</h1>
+    <p id="popup-offer"></p>
+    <p id="popup-coupon" class="coupon"></p>
+    <button id="closePopup">Awesome 😍</button>
+  </div>
+</div>
+
+<script>
+// 🔗 Google Sheets Web App URL
+const SHEET_URL = "https://script.google.com/macros/s/AKfycbxf7CSMU3baSCkIjxBOKJb7vDS77S0rCNnvnQOPRkjukFslGtjYymxDAJq2OttvuQLG/exec";
+
+document.addEventListener("DOMContentLoaded", () => {
+
+const canvas = document.getElementById("wheel");
+const ctx = canvas.getContext("2d");
+const rotator = document.getElementById("wheel-rotator");
+
+const nameInput = document.getElementById("name");
+const phoneInput = document.getElementById("phone");
+const emailInput = document.getElementById("email");
+const spinBtn = document.getElementById("spinBtn");
+const spinInfo = document.getElementById("spinInfo");
+
+const overlay = document.getElementById("overlay");
+const popupOffer = document.getElementById("popup-offer");
+const popupCoupon = document.getElementById("popup-coupon");
+const closePopup = document.getElementById("closePopup");
+
+const labels = ["30% OFF","15% OFF","Try Next Time","40% OFF","25% OFF","50% OFF"];
+const colors = ["#000","#14c6cc","#ff006f","#14c6cc","#ff006f","#ffc107"];
+
+const slice = 2 * Math.PI / labels.length;
+const center = canvas.width / 2;
+let rotation = 0;
+let spinsUsed = 0;
+
+function drawWheel() {
+  labels.forEach((text, i) => {
+    ctx.beginPath();
+    ctx.moveTo(center, center);
+    ctx.arc(center, center, center, slice*i, slice*(i+1));
+    ctx.fillStyle = colors[i];
+    ctx.fill();
+
+    ctx.save();
+    ctx.translate(center, center);
+    ctx.rotate(slice*i + slice/2);
+    ctx.textAlign = "right";
+    ctx.fillStyle = "#fff";
+    ctx.font = "bold 14px Arial";
+    ctx.fillText(text, center - 15, 5);
+    ctx.restore();
+  });
+}
+drawWheel();
+
+function updateUI() {
+  const left = 2 - spinsUsed;
+  spinInfo.innerHTML = `🎯 You have <b>${left}</b> spin${left!==1?"s":""}`;
+  spinBtn.disabled =
+    left<=0 ||
+    !nameInput.value ||
+    !/^\d{10}$/.test(phoneInput.value) ||
+    (emailInput.value && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailInput.value));
+}
+
+[nameInput, phoneInput, emailInput].forEach(i=>i.addEventListener("input",updateUI));
+
+spinBtn.onclick = () => {
+  if (spinsUsed>=2) return;
+  const index = spinsUsed===0 ? Math.floor(Math.random()*5) : 5;
+  rotation += 360*6 + (360/labels.length)*index;
+  rotator.style.transform = `rotate(${rotation}deg)`;
+  spinsUsed++;
+  updateUI();
+
+  setTimeout(()=>{
+    const offer = labels[index];
+    if (offer==="Try Next Time") { alert("🍀 Better luck next time!"); return; }
+    const discount = offer.match(/\d+/)[0];
+    const coupon = `SONOFSWAAD${discount}`;
+    popupOffer.innerText = `🎉 You won ${offer}`;
+    popupCoupon.innerText = `🎟 Coupon Code: ${coupon}`;
+    overlay.classList.remove("hidden");
+
+    fetch(SHEET_URL,{
+      method:"POST",
+      mode:"no-cors",
+      body:JSON.stringify({
+        name:nameInput.value,
+        phone:phoneInput.value,
+        email:emailInput.value||"",
+        offer,coupon
+      })
+    });
+  },5200);
+};
+
+closePopup.onclick = ()=>overlay.classList.add("hidden");
+updateUI();
+});
+</script>
+
+</body>
+</html>
